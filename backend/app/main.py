@@ -1,4 +1,5 @@
 import os
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base
@@ -8,12 +9,18 @@ from . import crud
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
-Base.metadata.create_all(bind=engine)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    Base.metadata.create_all(bind=engine)
+    yield
+
 
 app = FastAPI(
     title="Inventory & Order Management API",
     description="A simplified inventory and order management system",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 allowed_origins = os.getenv("CORS_ORIGINS", "*").split(",")
